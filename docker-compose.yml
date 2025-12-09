@@ -1,0 +1,161 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: draizer_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U draizer_user -d draizer_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - draizer_network
+  
+  redis:
+    image: redis:7-alpine
+    container_name: draizer_redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - draizer_network
+  
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: draizer_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - shared_memory:/dev/shm  # Shared memory для чтения из C engine
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket для управления контейнерами
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      c_engine:
+        condition: service_healthy
+    environment:
+      - POSTGRES_SERVER=postgres
+      - REDIS_HOST=redis
+    networks:
+      - draizer_network
+  
+  # NEW: Celery Worker для background tasks
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: draizer_celery_worker
+    command: celery -A app.tasks.celery_app worker --loglevel=info --pool=solo
+    volumes:
+      - ./backend:/app
+      - ai_data:/app/data
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - POSTGRES_SERVER=postgres
+      - REDIS_HOST=redis
+    networks:
+      - draizer_network
+  
+  # NEW: Celery Beat для periodic tasks
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: draizer_celery_beat
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - draizer_network
+  
+  # NEW: nginx SSL termination for WebSocket connections
+  # NEW: C Trading Engine
+  c_engine:
+    build:
+      context: ./backend/c_engine
+      dockerfile: Dockerfile
+    container_name: draizer_c_engine
+    privileged: true  # Для shared memory
+    volumes:
+      - ./backend/c_engine/config:/app/c_engine/config
+      - engine_logs:/var/log
+      - shared_memory:/dev/shm  # Shared memory для IPC
+    environment:
+      - PAPER_MODE=true
+    networks:
+      - draizer_network
+    restart: on-failure
+    stop_grace_period: 10s
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f draizer_engine > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"      # Максимум 10MB на файл
+        max-file: "3"        # Максимум 3 файла (итого 30MB)
+        compress: "true"     # Сжатие старых логов
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: draizer_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - draizer_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  ai_data:
+  engine_logs:  # NEW: Логи C engine
+  shared_memory:  # NEW: Shared memory для IPC между Python и C
+
+networks:
+  draizer_network:
+    driver: bridge

@@ -1,0 +1,67 @@
+# FastAPI и зависимости
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[argon2]==1.7.4
+python-multipart==0.0.6
+cryptography==41.0.7
+pyotp==2.9.0
+
+# Redis
+redis==5.0.1
+hiredis==2.2.3
+
+# HTTP клиенты
+httpx==0.25.2
+aiohttp==3.9.1
+requests==2.31.0
+websockets==12.0
+
+# Docker API
+docker==7.0.0
+
+# AI APIs
+openai==1.12.0
+
+# Validation & Serialization
+email-validator==2.1.0
+python-dateutil==2.8.2
+
+# Monitoring & Logging
+prometheus-fastapi-instrumentator==6.1.0
+python-json-logger==2.0.7
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Utils
+python-dotenv==1.0.0
+tenacity==8.2.3
+
+# Background Tasks
+celery==5.3.4
+celery-redbeat==2.2.0
+
+# Telegram
+telethon==1.33.1
+python-telegram-bot==20.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+faker==20.1.0
+
+# Additional Security
+itsdangerous==2.1.2
+bleach==6.1.0

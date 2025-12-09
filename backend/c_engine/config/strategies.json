@@ -1,0 +1,38 @@
+{
+  "strategies": [
+    {
+      "name": "cross_exchange",
+      "enabled": true,
+      "params": {
+        "min_spread_bps": 75,
+        "min_profit_usd": 0.50,
+        "max_position_usd": 150,
+        "max_price_age_ms": 100,
+        "capital_allocation": 0.70
+      }
+    },
+    {
+      "name": "funding_rate",
+      "enabled": false,
+      "params": {
+        "min_funding_rate": 0.03,
+        "hedge_enabled": true,
+        "capital_allocation": 0.30,
+        "check_interval_sec": 60
+      }
+    },
+    {
+      "name": "triangular",
+      "enabled": false,
+      "params": {
+        "min_profit_bps": 15,
+        "cycles": [
+          ["BTCUSDT", "ETHUSDT", "ETHBTC"]
+        ],
+        "capital_allocation": 0.0
+      }
+    }
+  ]
+}
+
+

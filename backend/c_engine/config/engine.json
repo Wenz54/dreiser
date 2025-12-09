@@ -1,0 +1,94 @@
+{
+  "capital_usd": 1000,
+  "paper_mode": true,
+  "min_spread_bps": 10.0,
+  "max_position_size_usd": 200,
+  "max_open_positions": 10,
+  "risk_percent": 1.5,
+  "strategies": {
+    "spot_futures": {
+      "enabled": true,
+      "priority": 1,
+      "min_spread_bps": 10.0,
+      "target_spread_bps": 15.0,
+      "fat_spread_bps": 25.0,
+      "funding_rate_threshold_bps": 1.0,
+      "comment": "🔥 ОСНОВНАЯ: Spot-Futures арбитраж Bitfinex <-> Deribit, учет funding rates"
+    },
+    "statistical": {
+      "enabled": true,
+      "priority": 2,
+      "lookback_periods": 100,
+      "z_score_threshold": 2.0,
+      "comment": "Статистический арбитраж на микро-движениях внутри биржи"
+    },
+    "triangular": {
+      "enabled": true,
+      "priority": 3,
+      "min_spread_bps": 100,
+      "realistic_only": true,
+      "comment": "Триангулярный арбитраж для отлова аномалий, консервативный подход"
+    }
+  },
+  "enabled_symbols": [
+    "BTCUSD",
+    "ETHUSD",
+    "SOLUSD",
+    "ADAUSD",
+    "DOGEUSD",
+    "LINKUSD",
+    "MATICUSD",
+    "DOTUSD",
+    "XRPUSD"
+  ],
+  "exchanges": {
+    "bitfinex": {
+      "enabled": true,
+      "type": "spot",
+      "ws_url": "wss://api-pub.bitfinex.com/ws/2",
+      "rest_url": "https://api-pub.bitfinex.com/v2",
+      "fee_maker_bps": 10.0,
+      "fee_taker_bps": 20.0,
+      "ping_ms": 0.803,
+      "symbols_format": "tBTCUSD",
+      "comment": "✅ Bitfinex SPOT - taker 0.20%, maker 0.10% | ОТЛИЧНЫЙ ПИНГ 0.8ms!",
+      "api_key": "OPTIONAL_FOR_PUBLIC_DATA",
+      "api_secret": "OPTIONAL_FOR_PUBLIC_DATA"
+    },
+    "deribit": {
+      "enabled": true,
+      "type": "futures_perpetual",
+      "ws_url": "wss://www.deribit.com/ws/api/v2",
+      "rest_url": "https://www.deribit.com/api/v2",
+      "fee_maker_bps": -2.5,
+      "fee_taker_bps": 5.0,
+      "ping_ms": 0.882,
+      "has_funding": true,
+      "funding_interval_hours": 8,
+      "symbols_format": "BTC-PERPETUAL",
+      "comment": "✅ Deribit FUTURES - taker 0.05%, maker -0.025% (rebate!) | ПИНГ 0.88ms!",
+      "api_key": "OPTIONAL_FOR_PUBLIC_DATA",
+      "api_secret": "OPTIONAL_FOR_PUBLIC_DATA"
+    },
+    "binance": {
+      "enabled": false,
+      "comment": "❌ DISABLED - переключились на Bitfinex (лучший пинг)"
+    },
+    "bybit": {
+      "enabled": false,
+      "comment": "❌ DISABLED - переключились на Deribit (futures с rebate)"
+    }
+  },
+  "risk_management": {
+    "spot_futures_min_bps": 10.0,
+    "spot_futures_target_bps": 15.0,
+    "spot_futures_fat_bps": 25.0,
+    "effective_fees_bps": 10.75,
+    "comment": "Bitfinex 0.1% + Deribit 0.0125% mixed + slippage 0.02% - Deribit rebate 0.025% = 0.1075%"
+  },
+  "performance_target": {
+    "latency_us": 7,
+    "orders_per_second": 10000,
+    "comment": "🚀 Целевая latency: ~7 микросекунд на детекцию возможности"
+  }
+}
